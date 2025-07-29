@@ -2,6 +2,7 @@ import pytest
 from app.database import engine, Base, SessionLocal
 from app.main import app
 from fastapi.testclient import TestClient
+from app.database import get_db
 
 @pytest.fixture(scope="session")
 def db_engine():

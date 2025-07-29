@@ -14,23 +14,27 @@ from app.services.ingestion import generate_synthetic_transcript
 fake = faker.Faker()
 
 def ingest_one():
-    # Synchronous function for ingestion (runs in thread pool)
-    transcript = generate_synthetic_transcript()
-    with SessionLocal() as db:  # Use sync session
-        call = Call(
-            call_id=fake.uuid4(),
-            agent_id=fake.uuid4(),
-            customer_id=fake.uuid4(),
-            language="en",
-            start_time=datetime.now() - timedelta(days=fake.random_int(1, 30)),
-            duration_seconds=fake.random_int(60, 600),
-            transcript=transcript,
-            agent_talk_ratio=compute_talk_ratio(transcript),
-            customer_sentiment_score=compute_sentiment(transcript),
-            embedding=compute_embedding(transcript)
-        )
-        db.add(call)
-        db.commit()
+    try:
+        transcript = generate_synthetic_transcript()
+        with SessionLocal() as db:
+            call = Call(
+                call_id=fake.uuid4(),
+                agent_id=fake.uuid4(),
+                customer_id=fake.uuid4(),
+                language="en",
+                start_time=datetime.now() - timedelta(days=fake.random_int(1, 30)),
+                duration_seconds=fake.random_int(60, 600),
+                transcript=transcript,
+                agent_talk_ratio=compute_talk_ratio(transcript),
+                customer_sentiment_score=compute_sentiment(transcript),
+                embedding=compute_embedding(transcript)
+            )
+            db.add(call)
+            db.commit()
+        print(f"Inserted call_id: {call.call_id}")
+    except Exception as e:
+        print(f"Failed to ingest a call: {e}")
+
 
 def main():
     # Use ThreadPoolExecutor for parallel execution of sync tasks
