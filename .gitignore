@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.env
+*.egg-info/
+dist/
+build/
+*.db  # Local SQLite
+data/*.json  # If storing large transcripts
