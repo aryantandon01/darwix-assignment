@@ -46,20 +46,13 @@ def compute_embedding(transcript: str) -> np.ndarray:
 def compute_sentiment(transcript: str) -> float:
     """Compute sentiment score using Hugging Face pipeline."""
     result = sentiment_pipeline(transcript)[0]
-    # Adjust score to -1 to +1 scale (adapt based on model's output; this example assumes 1-5 star rating from the public model)
-    # Note: This model outputs labels like '1 star' to '5 stars' - map to -1 to +1
-    label = result['label']
-    if '1' in label:
-        return -1.0
-    elif '2' in label:
-        return -0.5
-    elif '3' in label:
-        return 0.0
-    elif '4' in label:
-        return 0.5
-    elif '5' in label:
-        return 1.0
-    return 0.0  # Fallback
+    label = result['label'].upper()
+    score = result['score']
+    if label == 'POSITIVE':
+        return score  # 0 to 1
+    elif label == 'NEGATIVE':
+        return -score  # -1 to 0
+    return 0.0
 
 def compute_talk_ratio(transcript: str) -> float:
     """Calculate agent talk ratio; exclude filler words (very rough)."""

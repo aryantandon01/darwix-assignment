@@ -8,7 +8,7 @@ class CallResponse(BaseModel):
     customer_sentiment_score: float
 
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class CallDetail(BaseModel):
     call_id: str
@@ -22,4 +22,4 @@ class CallDetail(BaseModel):
     customer_sentiment_score: float
 
     class Config:
-        from_attributes = True
+        orm_mode = True
