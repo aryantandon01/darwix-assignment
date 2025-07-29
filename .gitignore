@@ -11,3 +11,4 @@ dist/
 build/
 *.db  # Local SQLite
 data/*.json  # If storing large transcripts
+dev.db
