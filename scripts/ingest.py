@@ -1,4 +1,8 @@
-import asyncio
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import concurrent.futures
 import faker
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
@@ -9,28 +13,30 @@ from app.services.ingestion import generate_synthetic_transcript
 
 fake = faker.Faker()
 
-async def ingest_one(db: Session):
+def ingest_one():
+    # Synchronous function for ingestion (runs in thread pool)
     transcript = generate_synthetic_transcript()
-    call = Call(
-        call_id=fake.uuid4(),
-        agent_id=fake.uuid4(),
-        customer_id=fake.uuid4(),
-        language="en",
-        start_time=datetime.now() - timedelta(days=fake.random_int(1, 30)),
-        duration_seconds=fake.random_int(60, 600),
-        transcript=transcript,
-        agent_talk_ratio=compute_talk_ratio(transcript),
-        customer_sentiment_score=compute_sentiment(transcript),
-        embedding=compute_embedding(transcript)
-    )
-    db.add(call)
-    db.commit()
+    with SessionLocal() as db:  # Use sync session
+        call = Call(
+            call_id=fake.uuid4(),
+            agent_id=fake.uuid4(),
+            customer_id=fake.uuid4(),
+            language="en",
+            start_time=datetime.now() - timedelta(days=fake.random_int(1, 30)),
+            duration_seconds=fake.random_int(60, 600),
+            transcript=transcript,
+            agent_talk_ratio=compute_talk_ratio(transcript),
+            customer_sentiment_score=compute_sentiment(transcript),
+            embedding=compute_embedding(transcript)
+        )
+        db.add(call)
+        db.commit()
 
-async def main():
-    async with engine.begin() as conn:
-        db = SessionLocal(bind=conn)
-        tasks = [ingest_one(db) for _ in range(200)]
-        await asyncio.gather(*tasks)
+def main():
+    # Use ThreadPoolExecutor for parallel execution of sync tasks
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:  # Adjust workers as needed
+        futures = [executor.submit(ingest_one) for _ in range(200)]
+        concurrent.futures.wait(futures)  # Wait for all to complete
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
